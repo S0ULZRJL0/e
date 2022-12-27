@@ -1,0 +1,294 @@
+local MainLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/fluxlib.txt")()
+local MainWindow = MainLib:Window("S0ULZ HUB / NERF STRIKE - FREE", "Made By S0ULZSWOOSH#6139 On Discord", Color3.fromRGB(6, 126, 255), Enum.KeyCode.LeftControl)
+
+local Guns = MainWindow:Tab("Guns", "http://www.roblox.com/asset/?id=6023426915")
+local Misc = MainWindow:Tab("Misc", "http://www.roblox.com/asset/?id=6023426915")
+local Screen = MainWindow:Tab("Screen", "http://www.roblox.com/asset/?id=6023426915")
+local EspColor = MainWindow:Tab("Esp Color", "http://www.roblox.com/asset/?id=6023426915")
+
+local players = game:GetService("Players")
+local plr = players.LocalPlayer
+local mouse = plr:GetMouse()
+local camera = workspace.CurrentCamera
+local runservice = game:GetService("RunService")
+
+local fovcircle = Drawing.new("Circle")
+fovcircle.Visible = false
+fovcircle.Radius = 200
+fovcircle.Color = Color3.fromRGB(198, 198, 198)
+fovcircle.Thickness = 1
+fovcircle.Filled = false
+fovcircle.Transparency = 1
+
+function notBehindWall(target)
+	local ray = Ray.new(plr.Character.Head.Position, (target.Position - plr.Character.Head.Position).Unit * 300) 
+	local part, position = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(ray,{plr.Character}, false, true)
+	if part then
+		local humanoid = part.Parent:FindFirstChildOfClass("Humanoid")
+
+		if not humanoid then
+			humanoid = part.Parent.Parent:FindFirstChildOfClass("Humanoid")
+		end
+
+		if humanoid and target and humanoid.Parent == target.Parent then
+			local pos,visible = camera:WorldToScreenPoint(target.Position)
+			if visible then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
+local function ClosestPlayerToMouse()
+	local target = nil
+	local dist = math.huge
+	for i,v in pairs(players:GetPlayers()) do
+		if v.Name ~= plr.Name then
+			if v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") and _G.SlientAim then
+				local screenpoint = camera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
+				local check = (Vector2.new(mouse.X,mouse.Y)-Vector2.new(screenpoint.X,screenpoint.Y)).magnitude
+
+				if check < dist then
+					if check < fovcircle.Radius then
+						if notBehindWall(v.Character:WaitForChild("Head")) then
+							target  = v
+							dist = check
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return target 
+end
+
+function CreateCham(name,parent,face,Color) -- function that creates the Chams
+	if not parent:FindFirstChild(name.. tostring(face)) then
+		local SurfaceGui = Instance.new("SurfaceGui",parent) --- Creates a SurfaceGui in the game
+		SurfaceGui.Parent = parent
+		SurfaceGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		SurfaceGui.Face = Enum.NormalId[face]
+		SurfaceGui.LightInfluence = 0
+		SurfaceGui.ResetOnSpawn = false
+		SurfaceGui.Name = name.. tostring(face)
+		SurfaceGui.AlwaysOnTop = true
+		local Frame = Instance.new("Frame",SurfaceGui)
+		Frame.BackgroundColor3 = Color -- colour for the surfacgui
+		Frame.Size = UDim2.new(1,0,1,0)
+		Frame.Name = "Frame"
+	else
+		if parent:WaitForChild(name.. tostring(face)):FindFirstChild("Frame") then
+			parent:WaitForChild(name.. tostring(face)):WaitForChild("Frame").BackgroundColor3 = Color
+		end
+	end
+end
+
+local function CreateEsp(name,text,P,Color)
+	if not P:FindFirstChild(name) then
+		local ESP = Instance.new("BillboardGui")
+		local EspText = Instance.new("TextLabel")
+
+		ESP.Name = name
+		ESP.Parent = P
+		ESP.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		ESP.Active = true
+		ESP.AlwaysOnTop = true
+		ESP.LightInfluence = 1.000
+		ESP.Size = UDim2.new(0, 200, 0, 50)
+		ESP.SizeOffset = Vector2.new(0, 0.3)
+		ESP.Adornee = P
+
+		EspText.Name = "EspText"
+		EspText.Parent = ESP
+		EspText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		EspText.BackgroundTransparency = 1.000
+		EspText.Size = UDim2.new(0, 200, 0, 50)
+		EspText.Font = Enum.Font.SourceSans
+		EspText.Text = text
+		EspText.TextColor3 = Color
+		EspText.TextSize = 20
+		EspText.TextWrapped = true
+	else
+		if P:WaitForChild(name):FindFirstChild("EspText") then
+			P:WaitForChild(name):WaitForChild("EspText").TextColor3 = Color
+		end
+	end
+end
+
+Guns:Toggle("Slient Aim", "Automatically Headshots A Player If They Are In Range Of Your Mouse!", false, function(t)
+	_G.SlientAim = t
+	fovcircle.Visible = t
+end)
+
+Misc:Toggle("Kill All Visible Players (can kick but not ban)", "Kills All Players Visible!", false, function(t)
+	_G.KillAllVisiblePlayers = t
+end)
+
+Misc:Toggle("Kill All Visible Turrets (can kick but not ban)", "Kills All Turrets Visible!", false, function(t)
+	_G.KillAllVisibleTurrets = t
+end)
+
+Screen:Toggle("Name Esp", "Shows All Players In-Game Name Threw Walls (Like Wallhack)", false, function(t)
+	_G.NameEsp = t
+end)
+
+Screen:Toggle("Chams Esp", "Shows All Players In-Game Body Parts Threw Walls (Like Wallhack)", false, function(t)
+	_G.ChamEsp = t
+end)
+
+Screen:Toggle("Turrets Esp", "Shows All Players In-Game Body Parts Threw Walls (Like Wallhack)", false, function(t)
+	_G.TurretEsp = t
+end)
+
+Screen:Button("Rainbow Crosshair", "This Will Put A Rainbow Crosshair In The Middle Of Your Screen.", function()
+	crosshairlength=17
+	loadstring(game:HttpGetAsync("https://pastebin.com/raw/HnQMfe5p"))()
+end)
+
+EspColor:Colorpicker("Name Esp Color", Color3.fromRGB(255, 255, 255), function(t)
+	_G.NameEspColor = t
+end)
+
+EspColor:Colorpicker("Chams Esp Color", Color3.fromRGB(255, 255, 255), function(t)
+	_G.ChamsEspColor = t
+end)
+
+EspColor:Colorpicker("Turret Esp Color", Color3.fromRGB(255, 255, 255), function(t)
+	_G.TurretEspColor = t
+end)
+
+_G.NameEspColor = Color3.fromRGB(255, 255, 255)
+_G.ChamsEspColor = Color3.fromRGB(255,255,255)
+_G.TurretEspColor = Color3.fromRGB(255,255,255)
+
+local mt = getrawmetatable(game)
+local namecall = mt.__namecall
+setreadonly(mt,false)
+
+mt.__namecall = function(self,...)
+
+	local args = {...}
+	local method = getnamecallmethod()
+
+	if tostring(self) == "TGSShootCombatV2_ReportHit" and method == "FireServer" and ClosestPlayerToMouse() then
+		args[3] = ClosestPlayerToMouse().Character.Head
+		args[4] = ClosestPlayerToMouse().Character.Head.Position
+		return self.FireServer(self, unpack(args))
+	end
+	return namecall(self,...)
+end
+
+runservice.RenderStepped:Connect(function()
+	fovcircle.Position = Vector2.new(mouse.X,mouse.Y)
+	
+	if _G.KillAllVisibleTurrets then
+		for _,v in pairs(game:GetService("Workspace").Temp.Abilities:GetChildren()) do
+			if v:FindFirstChild("TurretServerScript") and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 and game.Players.LocalPlayer.Character:FindFirstChild("Head") and notBehindWall(v) then
+				pcall(function()
+					local key = game.HttpService:GenerateGUID(false)--you're gonna shoot your eye out with that protection
+					local args = {
+						[1] = v.Position,
+						[2] = v.Position,
+						[3] = 0.1025786002477,
+						[4] = key,
+						[5] = "EliteTurbine",
+						[6] = 1,
+						[7] = v,
+						[8] = "Dart_Default"
+					}
+					game:GetService("ReplicatedStorage").TGSShootCombatV2_ServerCreateProjectile:FireServer(unpack(args))
+					local args = {
+						[1] = 100,
+						[2] = key,
+						[3] = v,
+						[4] = v.Position,
+						[5] = v.Position,
+						[6] = "EliteTurbine"
+					}
+					game:GetService("ReplicatedStorage").TGSShootCombatV2_ReportHit:FireServer(unpack(args))
+				end)
+			end
+		end
+	end
+	
+	for _,Player in pairs(game.Players:GetPlayers()) do
+		if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player ~= game.Players.LocalPlayer then
+			if _G.KillAllVisiblePlayers then
+				if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Head") and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 and Player.Character:FindFirstChildOfClass("Humanoid").Health > 0 and Player.Character:FindFirstChild("Head") and notBehindWall(Player.Character.Head) then
+					pcall(function()
+						local key = game.HttpService:GenerateGUID(false)--you're gonna shoot your eye out with that protection
+						local args = {
+							[1] = Player.Character.Head.Position,
+							[2] = Player.Character.Head.Position,
+							[3] = 0.1025786002477,
+							[4] = key,
+							[5] = "EliteTurbine",
+							[6] = 1,
+							[7] = Player.Character,
+							[8] = "Dart_Default"
+						}
+						game:GetService("ReplicatedStorage").TGSShootCombatV2_ServerCreateProjectile:FireServer(unpack(args))
+						local args = {
+							[1] = 100,
+							[2] = key,
+							[3] = Player.Character.Head,
+							[4] = Player.Character.Head.Position,
+							[5] = Player.Character.Head.Position,
+							[6] = "EliteTurbine"
+						}
+						game:GetService("ReplicatedStorage").TGSShootCombatV2_ReportHit:FireServer(unpack(args))
+					end)
+				end
+			end
+			
+			if _G.ChamEsp then
+				for _,Part in pairs(Player.Character:GetChildren()) do
+					if Part:IsA("BasePart") then
+						CreateCham("cham",Part,"Back",_G.ChamsEspColor)
+						CreateCham("cham",Part,"Front",_G.ChamsEspColor)
+						CreateCham("cham",Part,"Top",_G.ChamsEspColor)
+						CreateCham("cham",Part,"Bottom",_G.ChamsEspColor)
+						CreateCham("cham",Part,"Right",_G.ChamsEspColor)
+						CreateCham("cham",Part,"Left",_G.ChamsEspColor)
+					end
+				end
+			else
+				for _,Part in pairs(Player.Character:GetChildren()) do
+					if Part:IsA("BasePart") then
+						if Part:FindFirstChild("chamBack") then Part:WaitForChild("chamBack"):Destroy() end
+						if Part:FindFirstChild("chamFront") then Part:WaitForChild("chamFront"):Destroy() end
+						if Part:FindFirstChild("chamTop") then Part:WaitForChild("chamTop"):Destroy() end
+						if Part:FindFirstChild("chamBottem") then Part:WaitForChild("chamBottem"):Destroy() end
+						if Part:FindFirstChild("chamRight") then Part:WaitForChild("chamRight"):Destroy() end
+						if Part:FindFirstChild("chamLeft") then Part:WaitForChild("chamLeft"):Destroy() end
+					end
+				end
+			end
+
+			if _G.NameEsp then
+				if Player.Character:FindFirstChild("Head") then
+					CreateEsp("Esp",Player.Name,Player.Character:WaitForChild("Head"),_G.NameEspColor)
+				end
+			else
+				if Player.Character:FindFirstChild("Head") and Player.Character:WaitForChild("Head"):FindFirstChild("Esp") then
+					Player.Character:WaitForChild("Head"):WaitForChild("Esp"):Destroy()
+				end
+			end
+		end
+	end
+	
+	if _G.TurretEsp then
+		for _,v in pairs(game:GetService("Workspace").Temp.Abilities:GetChildren()) do
+			CreateEsp("TurretEsp",v.Name,v,_G.TurretEspColor)
+		end
+	else
+		for _,v in pairs(game:GetService("Workspace").Temp.Abilities:GetChildren()) do
+			if v:FindFirstChild("TurretEsp") then
+				v:WaitForChild("TurretEsp"):Destroy()
+			end
+		end
+	end
+end)
